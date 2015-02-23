@@ -119,3 +119,27 @@ void Extractor::show_histo(Mat&img, int choice) {
     imshow(name,histo);
     waitKey(0);
 }
+
+std::vector<float> Extractor::profil(std::pair<int,int> haut,std::pair<int,int> bas) {
+    int j;
+    std::vector<float> result;
+    result.resize(0);
+    for(int i= haut.second; i < bas.second; i+= bas.first-haut.first/(5*2)) {
+        for(j = haut.first ; j < bas.first; j++){
+            if((int)source.at<unsigned char>(i, j) == 0){
+                break;
+            }
+        }
+        result.push_back((bas.first-haut.first)/j);
+    }
+
+    for(int i= haut.second; i < bas.second; i+= bas.first-haut.first/(5*2)) {
+        for(j = bas.first ; j > haut.first ; j--){
+            if((int)source.at<unsigned char>(i, j) == 0){
+                break;
+            }
+        }
+        result.push_back((bas.first-haut.first)/j);
+    }
+    return result;
+}
