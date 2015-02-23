@@ -11,8 +11,6 @@ class Extractor
 {
 protected:
     Mat source;
-    std::vector<int> start_lines;
-    std::vector<int> end_lines;
     std::vector< std::pair<int, int> > positions;
 
 public:

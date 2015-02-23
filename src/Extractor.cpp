@@ -3,8 +3,6 @@
 
 Extractor::Extractor(Mat& img) {
     source = img;
-    start_lines.resize(10);
-    end_lines.resize(10);
 }
 
 
@@ -77,6 +75,8 @@ void Extractor::show_element(int line, int column) {
     namedWindow( "test lignes", WINDOW_NORMAL);
     imshow("test lignes",tmp2);
     waitKey(0);
+
+    profil(positions[0], positions[1]);
 }
 
 
@@ -120,26 +120,46 @@ void Extractor::show_histo(Mat&img, int choice) {
     waitKey(0);
 }
 
-std::vector<float> Extractor::profil(std::pair<int,int> haut,std::pair<int,int> bas) {
+
+std::vector<float> Extractor::profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_droit) {
     int j;
     std::vector<float> result;
-    result.resize(0);
-    for(int i= haut.second; i < bas.second; i+= bas.first-haut.first/(5*2)) {
-        for(j = haut.first ; j < bas.first; j++){
-            if((int)source.at<unsigned char>(i, j) == 0){
+
+//    std::cout << "Go..." << std::endl;
+//    std::cout << "deb : " << haut_gauche.second << std::endl;
+//    std::cout << "fin : " << bas_droit.second << std::endl;
+//    std::cout << "nb loop : " << ((bas_droit.second - haut_gauche.second) / 5.0) + 0.5  << std::endl;
+
+    for(int i = haut_gauche.second; i < bas_droit.second; i += ((bas_droit.second - haut_gauche.second) / 5.0) + 0.5) {
+
+//        std::cout << "loop : " << i << std::endl;
+
+//        std::cout << "HG : " << haut_gauche.first << std::endl;
+//        std::cout << "BD : " << bas_droit.first << std::endl;
+
+        for(j = haut_gauche.first ; j < bas_droit.first; j++) {
+
+//            std::cout << "Attention en dessous c de la merde" << std::endl;
+            if((int) source.at<unsigned char>(i, j) == 0) {
+//                std::cout << "Ce qu'on ne verra jamais" << std::endl;
                 break;
             }
         }
-        result.push_back((bas.first-haut.first)/j);
+
+        result.push_back((bas_droit.first - haut_gauche.first) / j);
+
+//        std::cout << "Param 1" << std::endl;
     }
 
-    for(int i= haut.second; i < bas.second; i+= bas.first-haut.first/(5*2)) {
-        for(j = bas.first ; j > haut.first ; j--){
-            if((int)source.at<unsigned char>(i, j) == 0){
+    for(int i = haut_gauche.second; i < bas_droit.second; i += ((bas_droit.second - haut_gauche.second) / 5.0) + 0.5) {
+        for(j = bas_droit.first ; j > haut_gauche.first ; j--) {
+            if((int)source.at<unsigned char>(i, j) == 0) {
                 break;
             }
         }
-        result.push_back((bas.first-haut.first)/j);
+        result.push_back((bas_droit.first - haut_gauche.first) / j);
+
+//        std::cout << "Param 2" << std::endl;
     }
     return result;
 }
