@@ -147,8 +147,6 @@ std::vector<float> Extractor::profil(std::pair<int,int> haut_gauche, std::pair<i
         }
 
         result.push_back((bas_droit.first - haut_gauche.first) / j);
-
-//        std::cout << "Param 1" << std::endl;
     }
 
     for(int i = haut_gauche.second; i < bas_droit.second; i += ((bas_droit.second - haut_gauche.second) / 5.0) + 0.5) {
