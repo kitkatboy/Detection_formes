@@ -16,6 +16,7 @@ protected:
 public:
     Extractor(Mat& img);
     ~Extractor();
+    void run();
     void get_positions();
     void show_element(int line, int column);
     void show_histo(Mat& img, int choice);

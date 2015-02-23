@@ -10,6 +10,29 @@ Extractor::~Extractor() {
 }
 
 
+void Extractor::run() {
+
+    std::vector< std::vector<float> > tmp;
+
+    get_positions();
+
+    for(int i = 0; i < 10; i++) {
+
+        tmp.resize(0);
+
+        for(int j = 0; j < 20; j++) {
+            tmp.push_back(profil(positions[i*40 + j*2], positions[i*40 + j*2 + 1]));
+
+            // TODO Moyenne de classe
+        }
+    }
+
+    show_element(1, 0);
+
+//    show_histo(source, 0);
+}
+
+
 void Extractor::get_positions() {
 
     int data;
@@ -75,8 +98,6 @@ void Extractor::show_element(int line, int column) {
     namedWindow( "test lignes", WINDOW_NORMAL);
     imshow("test lignes",tmp2);
     waitKey(0);
-
-    profil(positions[0], positions[1]);
 }
 
 
@@ -145,8 +166,9 @@ std::vector<float> Extractor::profil(std::pair<int,int> haut_gauche, std::pair<i
                 break;
             }
         }
-
         result.push_back((bas_droit.first - haut_gauche.first) / j);
+
+//        std::cout << "Param 1" << std::endl;
     }
 
     for(int i = haut_gauche.second; i < bas_droit.second; i += ((bas_droit.second - haut_gauche.second) / 5.0) + 0.5) {
