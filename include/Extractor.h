@@ -11,6 +11,8 @@ class Extractor
 {
 protected:
     Mat source;
+    int tot_lines = 0;
+    int tot_columns = 0;
     std::vector< std::pair<int, int> > positions;
 
 public:
