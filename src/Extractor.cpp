@@ -1,8 +1,9 @@
 #include "Extractor.h"
 
 
-Extractor::Extractor(Mat& img) {
-    source = img;
+Extractor::Extractor(Mat& img,Mat& img2) {
+    app = img;
+    test = img2;
 }
 
 
@@ -13,22 +14,43 @@ Extractor::~Extractor() {
 void Extractor::run() {
 
     std::vector< std::vector<float> > tmp;
+    std::vector< std::pair<int, int> > positions_app;
 
-    get_positions();
+    std::vector< std::pair<int, int> > positions_test;
 
-    for(int i = 1; i < 2; i++) {
+    positions_app = get_positions(app);
+
+    positions_test = get_positions(test);
+//    namedWindow( "test", WINDOW_NORMAL);
+//    imshow("test",test);
+//    waitKey(0);
+    std::cout<<"ok1"<<std::endl;
+    for(int i = 0; i < 10; i++) {
 
         tmp.resize(0);
 
         for(int j = 0; j < 20; j++) {
-            tmp.push_back(profil(positions[i*40 + j*2], positions[i*40 + j*2 + 1]));
+//            std::cout<<"ok2"<<std::endl;
+            tmp.push_back(profil(positions_app[i*40 + j*2], positions_app[i*40 + j*2 + 1],app));
 
-            show_element(i, j);
+            show_element(i, j,test,positions_test);
 
             // TODO Moyenne de classe
 
         }
+        std::cout<<"ok3-------------"<<std::endl;
+        for(int k =0;k<moyenne(tmp).size();k++){
+//            std::cout<< moyenne(tmp).at(k)<<std::endl;
+        }
         moy_class.push_back(moyenne(tmp));
+    }
+
+    std::cout<<"ok"<<std::endl;
+    for(int i = 0; i < 10; i++) {
+        for (int j = 0; j < 20; j++) {
+            show_element(i, j,test,positions_test);
+            std::cout<<"i : "<<i<<" j : "<<j<<" classe : "<<proba(profil(positions_test[i * 40 + j * 2], positions_test[i * 40 + j * 2 + 1], test))<<std::endl;
+        }
     }
 
 //    show_element(1, 0);
@@ -43,17 +65,20 @@ std::vector<float> Extractor::moyenne(std::vector<std::vector<float>> entree) {
         cpt = 0;
         for(int j = 0; j < entree.at(i).size(); j++) {
             cpt+=entree.at(i).at(j);
+            std::cout<<entree.at(i).at(j)<<std::endl;
         }
+
         moyenne.push_back(cpt/entree.at(i).size());
     }
     return moyenne;
 }
 
 
-void Extractor::get_positions() {
+std::vector< std::pair<int, int> > Extractor::get_positions(Mat source) {
 
-    int data;
-    bool in_line = false, in_column = false;
+    int data, tmp_haut,tmp_bas;
+    bool in_line = false, in_column = false, in_line_2 = false;
+    std::vector< std::pair<int, int> > positions;
     std::pair<int, int> haut_gauche, bas_droit;
 
     // Iterate in source lines
@@ -64,13 +89,15 @@ void Extractor::get_positions() {
 
             // Get Y haut gauche
             haut_gauche.second = i - 2;
-
+                tmp_haut = i - 2;
             in_line = true;
 
         } else if (data == 0 && in_line) {
 
             // Get Y bas droit
             bas_droit.second = i + 2;
+
+            tmp_bas = i +2;
 
             in_line = false;
 
@@ -80,6 +107,10 @@ void Extractor::get_positions() {
             Mat tmp2 = Mat::zeros(source.cols, bas_droit.second - haut_gauche.second, CV_8U);
             tmp2  = source.rowRange(haut_gauche.second, bas_droit.second);
 
+
+//            namedWindow( "Element", WINDOW_NORMAL);
+//            imshow("Element",tmp2);
+//            waitKey(0);
             for(int j = 0; j < tmp2.cols; j++) {
                 data = tmp2.rows - countNonZero(tmp2.col(j));
 
@@ -87,7 +118,7 @@ void Extractor::get_positions() {
 
                     // Get X and push haut gauche position
                     haut_gauche.first = j - 2;
-                    positions.push_back(haut_gauche);
+                    //positions.push_back(haut_gauche);
 
                     in_column = true;
                     tot_columns++;
@@ -96,19 +127,48 @@ void Extractor::get_positions() {
 
                     // Get X and push bas droit position
                     bas_droit.first = j + 2;
-                    positions.push_back(bas_droit);
+                    //positions.push_back(bas_droit);
 
                     in_column = false;
                     tot_columns++;
+
+                    Mat tmp3 = Mat::zeros(bas_droit.first - haut_gauche.first,tmp2.rows, CV_8U);
+                    tmp3  = tmp2.colRange(haut_gauche.first, bas_droit.first);
+
+                    in_line_2 = false;
+
+                    for(int k = 0; k < tmp3.rows; k++) {
+                        data = tmp3.cols - countNonZero(tmp3.row(k));
+
+                        if (data != 0 && !in_line_2) {
+
+                            // Get Y haut gauche
+//                            std::cout << haut_gauche.second <<" "<<k <<" "<<i<<std::endl;
+                            haut_gauche.second =tmp_haut+ k - 2;
+                            positions.push_back(haut_gauche);
+                            in_line_2 = true;
+
+                        } else if (data == 0 && in_line_2) {
+
+                            // Get Y bas droit
+                            bas_droit.second =  k + 2 +tmp_haut;
+                            positions.push_back(bas_droit);
+                            in_line_2 = false;
+                        }
+
+                    }
+                    if(haut_gauche.second > bas_droit.second) std::cout<<":("<<std::endl;
+                    if(haut_gauche.first > bas_droit.first) std::cout<<"   :("<<std::endl;
                 }
             }
             tot_lines++;
         }
     }
+    return positions;
 }
 
 
-void Extractor::show_element(int line, int column) {
+void Extractor::show_element(int line, int column,Mat source,std::vector< std::pair<int, int> > positions) {
 
     int width = positions[(line * tot_columns) + (column * 2) + 1].first - positions[(line * tot_columns) + (column * 2)].first;
     int height = positions[(line * tot_columns) + (column * 2) + 1].second - positions[(line * tot_columns) + (column * 2)].second;
@@ -167,7 +227,7 @@ void Extractor::show_histo(Mat&img, int choice) {
 }
 
 
-std::vector<float> Extractor::profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_droit) {
+std::vector<float> Extractor::profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_droit,Mat source) {
     int j;
     std::vector<float> result;
 
@@ -191,9 +251,9 @@ std::vector<float> Extractor::profil(std::pair<int,int> haut_gauche, std::pair<i
                 break;
             }
         }
-        result.push_back((bas_droit.first - haut_gauche.first) / j);
+        result.push_back((bas_droit.first - haut_gauche.first) / (float)j);
 
-//        std::cout << "Param 1" << std::endl;
+//        std::cout << "Param 1 " <<(bas_droit.first - haut_gauche.first) / (float)j<< std::endl;
     }
 
     for(int i = haut_gauche.second; i < bas_droit.second; i += ((bas_droit.second - haut_gauche.second) / 5.0) + 0.5) {
@@ -202,8 +262,50 @@ std::vector<float> Extractor::profil(std::pair<int,int> haut_gauche, std::pair<i
                 break;
             }
         }
-        result.push_back((bas_droit.first - haut_gauche.first) / j);
+        result.push_back((bas_droit.first - haut_gauche.first) / (float)j);
 
     }
+//    std::cout<<"       "<<result.at(1)<<std::endl;
     return result;
+}
+
+int Extractor::proba(std::vector<float> a_classer){
+    float sum;
+    float result = -1;
+    float tmp;
+    int rclass;
+
+    for(int i =0 ; i < moy_class.size(); i++){
+        sum = 0;
+        for(int j = 0; j < moy_class.size(); j++){
+
+//            std::cout<<"         1"<<std::endl;
+            sum += exp(-distance_euclidienne(a_classer,moy_class.at(j)));
+
+//            std::cout<<"         4"<<std::endl;
+        }
+
+//        std::cout<<"         11"<<std::endl;
+        tmp = exp(-distance_euclidienne(a_classer,moy_class.at(i)))/sum;
+
+//        std::cout<<"         44"<<std::endl;
+//        std::cout<<tmp<<std::endl;
+        if(tmp > result) {
+            result = tmp;
+            rclass = i;
+        }
+    }
+    std::cout<<result<<std::endl;
+    return rclass;
+
+}
+
+float Extractor::distance_euclidienne(std::vector<float> X, std::vector<float> Y){
+    float sum = 0;
+//    std::cout<<"         2"<<std::endl;
+    for(int i = 0; i < X.size(); i++){
+        sum += (X.at(i) - Y.at(i))*(X.at(i) - Y.at(i));
+    }
+//    std::cout<<"         3"<<std::endl;
+    return sqrt(sum);
 }
