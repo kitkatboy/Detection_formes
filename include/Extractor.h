@@ -14,6 +14,7 @@ protected:
     int tot_lines = 0;
     int tot_columns = 0;
     std::vector< std::pair<int, int> > positions;
+    std::vector<std::vector<float>> moy_class;
 
 public:
     Extractor(Mat& img);
@@ -23,6 +24,7 @@ public:
     void show_element(int line, int column);
     void show_histo(Mat& img, int choice);
     std::vector<float> profil(std::pair<int,int> haut,std::pair<int,int> bas);
+    std::vector<float> moyenne(std::vector<std::vector<float>> entree);
 };
 
 

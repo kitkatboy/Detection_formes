@@ -16,21 +16,37 @@ void Extractor::run() {
 
     get_positions();
 
-    for(int i = 0; i < 10; i++) {
+    for(int i = 1; i < 2; i++) {
 
         tmp.resize(0);
 
         for(int j = 0; j < 20; j++) {
             tmp.push_back(profil(positions[i*40 + j*2], positions[i*40 + j*2 + 1]));
 
+            show_element(i, j);
+
             // TODO Moyenne de classe
 
         }
+        moy_class.push_back(moyenne(tmp));
     }
 
 //    show_element(1, 0);
 
 //    show_histo(source, 0);
+}
+
+std::vector<float> Extractor::moyenne(std::vector<std::vector<float>> entree) {
+    float cpt;
+    std::vector<float> moyenne;
+    for(int i = 0; i< entree.size();i++) {
+        cpt = 0;
+        for(int j = 0; j < entree.at(i).size(); j++) {
+            cpt+=entree.at(i).at(j);
+        }
+        moyenne.push_back(cpt/entree.at(i).size());
+    }
+    return moyenne;
 }
 
 
