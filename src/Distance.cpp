@@ -1,5 +1,6 @@
 #include "Distance.h"
 
+
 Distance::Distance() {
 }
 
@@ -10,7 +11,11 @@ Distance::~Distance() {
 
 void Distance::run(std::vector< std::pair<int, int> >* positions_app,std::vector< std::pair<int, int> >* positions_test,cv::Mat app,cv::Mat test) {
 
+    int cpt;
+    int cptg = 0;
     std::vector< std::vector<double> > *tmp;
+
+    std::cout << "Methode Classifieur par distances euclidiennes minimum..." << std::endl;
 
     for(int i = 0; i < 10; i++) {
 
@@ -22,12 +27,9 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app,std::vector
         moy_class.push_back(moyenne(tmp));
     }
 
-    int cpt;
-    int cptg = 0;
-
     for(int i = 0; i < 10; i++) {
 
-        cpt=0;
+        cpt = 0;
 
         for (int j = 0; j < 10; j++) {
             if(i!=proba(profil(positions_test->at((i * positions_test->size() / 10) + (j * 2)), positions_test->at((i * positions_test->size() / 10) + (j * 2)+1), test))) {
@@ -35,23 +37,25 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app,std::vector
             }
         }
         cptg += cpt;
-        std::cout<<"il y a : "<<cpt<<" erreurs pour les "<<i<<std::endl;
+        std::cout << "  -> " << cpt << " erreurs pour les " << i << std::endl;
     }
-    std::cout<<"il y a : "<<cptg<<"% erreurs au total"<<std::endl;
+    std::cout << "-> " << cptg << "% d'erreurs" << std::endl;
 }
 
 
 std::vector<double> Distance::moyenne(std::vector< std::vector<double> > *entree) {
+
     double cpt;
-    int j;
+    unsigned long j;
     std::vector<double> moy;
 
-    for(int i = 0; i< entree->at(0).size();i++) {
+    for(unsigned long i = 0; i< entree->at(0).size();i++) {
+
         cpt = 0;
 
-        for(j = 0; j < entree->size(); j++) {
+        for(j = 0; j < entree->size(); j++)
             cpt+=entree->at(j).at(i);
-        }
+
         moy.push_back(cpt/entree->at(0).size());
     }
 
@@ -60,58 +64,75 @@ std::vector<double> Distance::moyenne(std::vector< std::vector<double> > *entree
 
 
 std::vector<double> Distance::profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_droit, cv::Mat& source) {
+
     int j;
     std::vector<double> result;
-    int d = 9;
 
-    for(int i = 1; i < d+1; i += 1) {
-        for(j = haut_gauche.first; j < bas_droit.first; j++) {
-            if((int) source.at<unsigned char>(haut_gauche.second+i*(((bas_droit.second - haut_gauche.second) / (double)(d+2)) + 0.5), j) == 0) {
+    int d = 9;
+    int correction = -1; // Facteur de correction du rectangle englobant
+    std::pair<int,int> x,y;
+
+    x.first = haut_gauche.first - correction;
+    x.second = bas_droit.first + correction;
+    y.first = haut_gauche.second - correction;
+    y.second = bas_droit.second + correction;
+
+    for(int i = 1; i < d+1; i++) {
+        for(j = x.first; j < x.second; j++) {
+            if((int)source.at<unsigned char>(y.first + i * (((y.second - y.first) / (double)(d+2)) + 0.5), j) == 0) {
                 break;
             }
         }
-        result.push_back((double)(j - haut_gauche.first)/(bas_droit.first - haut_gauche.first));
+        result.push_back((double)(j - x.first) / (x.second - x.first));
     }
-    for(int i = 1; i < d+1; i += 1) {
-        for(j = bas_droit.first ; j > haut_gauche.first ; j--) {
-            if((int)source.at<unsigned char>(haut_gauche.second + i*(((bas_droit.second - haut_gauche.second) / (double)(d+2)) + 0.5), j) == 0) {
+
+    for(int i = 1; i < d+1; i++) {
+        for(j = x.second ; j > x.first ; j--) {
+            if((int)source.at<unsigned char>(y.first + i * (((y.second - y.first) / (double)(d+2)) + 0.5), j) == 0) {
                 break;
+
             }
         }
-        result.push_back( (double)(bas_droit.first-j)/(bas_droit.first - haut_gauche.first));
+        result.push_back((double)(x.second - j) / (x.second - x.first));
     }
+
     return result;
 }
 
 
-int Distance::proba(std::vector<double> a_classer){
+unsigned long Distance::proba(std::vector<double> a_classer) {
+
     double sum;
     double result = -1;
     double tmp;
-    int rclass;
+    unsigned long rclass = 0;
 
-    for(int i =0 ; i < moy_class.size(); i++){
+    for(unsigned long i =0 ; i < moy_class.size(); i++){
+
         sum = 0;
-        for(int j = 0; j < moy_class.size(); j++){
+
+        for(unsigned long j = 0; j < moy_class.size(); j++)
             sum += exp(-distance_euclidienne(a_classer,moy_class.at(j)));
-        }
-        tmp = exp(-distance_euclidienne(a_classer,moy_class.at(i)))/sum;
+
+        tmp = exp(-distance_euclidienne(a_classer,moy_class.at(i))) / sum;
+
         if(tmp > result) {
             result = tmp;
             rclass = i;
         }
     }
+
     return rclass;
 }
 
 
 double Distance::distance_euclidienne(std::vector<double> X, std::vector<double> Y){
     double sum = 0;
-    if(X.size() != Y.size()) {
-        std::cout<<"calcul distance euclidienne impossible"<<std::endl;
-    }
-    for(int i = 0; i < X.size(); i++){
+
+    if(X.size() != Y.size()) std::cout<<"calcul distance euclidienne impossible"<<std::endl;
+
+    for(unsigned long i = 0; i < X.size(); i++)
         sum += (X.at(i) - Y.at(i))*(X.at(i) - Y.at(i));
-    }
+
     return sqrt(sum);
 }
