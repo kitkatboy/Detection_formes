@@ -50,7 +50,7 @@ void Extractor::get_positions(Mat& img, std::vector< std::pair<int,int> >* vec, 
 
 void Extractor::writeFile(std::vector< std::pair<int,int> >* vec, std::string name) {
 
-    std::string output = "../R2F_TP_2015/img/" + name + ".txt";
+    std::string output = "data/" + name + ".pos";
 
     std::ofstream outputFile;
     outputFile.open(output.c_str());
