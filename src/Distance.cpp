@@ -55,7 +55,7 @@ std::vector<double> Distance::moyenne(std::vector< std::vector<double> > *entree
         for(unsigned long j = 0; j < entree->size(); j++)
             cpt += entree->at(j).at(i);
 
-        moy.push_back(cpt / entree->at(0).size());  // TODO Pk diviser par la taille d'une ligne et pas d'une colonne?
+        moy.push_back(cpt / entree->at(0).size());
     }
 
     return moy;
