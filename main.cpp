@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     // Question 4
     Kppv * extract_3 = new Kppv();
-    extract_3->run(app, positions_app);
+    extract_3->run(positions_app, positions_test, app, test);
 
     delete extract_3;
 

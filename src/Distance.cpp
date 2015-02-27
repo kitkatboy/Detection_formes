@@ -9,7 +9,7 @@ Distance::~Distance() {
 }
 
 
-void Distance::run(std::vector< std::pair<int, int> >* positions_app,std::vector< std::pair<int, int> >* positions_test,cv::Mat app,cv::Mat test) {
+void Distance::run(std::vector< std::pair<int, int> >* positions_app, std::vector< std::pair<int, int> >* positions_test, cv::Mat& app, cv::Mat& test) {
 
     int cpt;
     int cptg = 0;
