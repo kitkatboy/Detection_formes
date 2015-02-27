@@ -1,5 +1,7 @@
 #include <cv.h>
 #include "Extractor.h"
+#include "Distance.h"
+#include "kppv.h"
 
 
 int main(int argc, char *argv[])
@@ -15,8 +17,21 @@ int main(int argc, char *argv[])
     extract->get_positions(app, positions_app, std::pair<int,int>(0,0), std::pair<int,int>(0,0), 0, true);
     extract->get_positions(test, positions_test, std::pair<int,int>(0,0), std::pair<int,int>(0,0), 0, false);
 
-
     delete extract;
+
+
+    // Question 3
+    Distance * extract_2 = new Distance();
+    extract_2->run(positions_app, positions_test, app, test);
+
+    delete extract_2;
+
+
+    // Question 4
+    Kppv * extract_3 = new Kppv();
+    extract_3->run(app, positions_app);
+
+    delete extract_3;
 
 
     return 0;
