@@ -15,7 +15,7 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app,std::vector
     int cptg = 0;
     std::vector< std::vector<double> > *tmp;
 
-    std::cout << "Methode Classifieur par distances euclidiennes minimum..." << std::endl;
+    std::cout << "\nMethode Classifieur par profils et distances euclidiennes minimum..." << std::endl;
 
     for(int i = 0; i < 10; i++) {
 
@@ -32,7 +32,7 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app,std::vector
         cpt = 0;
 
         for (int j = 0; j < 10; j++) {
-            if(i!=proba(profil(positions_test->at((i * positions_test->size() / 10) + (j * 2)), positions_test->at((i * positions_test->size() / 10) + (j * 2)+1), test))) {
+            if(i != proba(profil(positions_test->at((i * positions_test->size() / 10) + (j * 2)), positions_test->at((i * positions_test->size() / 10) + (j * 2)+1), test))) {
                 cpt++;
             }
         }
@@ -46,17 +46,16 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app,std::vector
 std::vector<double> Distance::moyenne(std::vector< std::vector<double> > *entree) {
 
     double cpt;
-    unsigned long j;
     std::vector<double> moy;
 
-    for(unsigned long i = 0; i< entree->at(0).size();i++) {
+    for(unsigned long i = 0; i < entree->at(0).size(); i++) {
 
         cpt = 0;
 
-        for(j = 0; j < entree->size(); j++)
-            cpt+=entree->at(j).at(i);
+        for(unsigned long j = 0; j < entree->size(); j++)
+            cpt += entree->at(j).at(i);
 
-        moy.push_back(cpt/entree->at(0).size());
+        moy.push_back(cpt / entree->at(0).size());  // TODO Pk diviser par la taille d'une ligne et pas d'une colonne?
     }
 
     return moy;
@@ -105,7 +104,7 @@ unsigned long Distance::proba(std::vector<double> a_classer) {
     double sum;
     double result = -1;
     double tmp;
-    unsigned long rclass = 0;
+    unsigned long rclass = 100;
 
     for(unsigned long i =0 ; i < moy_class.size(); i++){
 
