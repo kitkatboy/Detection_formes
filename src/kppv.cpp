@@ -9,31 +9,50 @@ Kppv::~Kppv() {
 }
 
 
-void Kppv::run(Mat& app, std::vector< std::pair<int,int> >* pos_app) {
+void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pair<int, int> >* pos_test, cv::Mat& app, cv::Mat& test) {
 
-    std::vector< std::vector<double> > densities;
+    int cpt;
+    int cptg = 0;
+    std::vector< std::vector<double> > *densities;
 
-    for(unsigned long i = 0; i < pos_app->size(); i+=2) {
-        densities.push_back(zoning(app, pos_app->at(i), pos_app->at(i + 1)));
+    std::cout << "\nMethode Classifieur par densites et k plus proches voisins..." << std::endl;
+
+    // Apprentissage
+    for(int i = 0; i < 10; i++) {   // Iteration lignes
+
+        densities = new std::vector< std::vector<double> >;
+
+        for(int j = 0; j < pos_app->size() / 10; j += 2)  // Iteration colonnes
+            densities->push_back(zoning(app, pos_app->at(i * (pos_app->size() / 10) + j), pos_app->at(i * (pos_app->size() / 10) + j + 1)));
+
+        classes.push_back(densities);
     }
+
+    // Test
+    for(int i = 0; i < 10; i++) {   // Iteration lignes
+
+        cpt = 0;
+
+        for(int j = 0; j < pos_test->size() / 10; j += 2) {  // Iteration colonnes
+            if(i != proba(zoning(test, pos_test->at(i * (pos_test->size() / 10) + j), pos_test->at(i * (pos_test->size() / 10) + j + 1))))
+                cpt++;
+        }
+
+        cptg += cpt;
+        std::cout << "  -> " << cpt << " erreurs pour les " << i << std::endl;
+    }
+    std::cout << "-> " << cptg << "% d'erreurs" << std::endl;
 }
 
 
-std::vector<double> Kppv::zoning(Mat& img, std::pair<int,int> haut_g, std::pair<int,int> bas_d) {
+std::vector<double> Kppv::zoning(cv::Mat& img, std::pair<int,int> haut_g, std::pair<int,int> bas_d) {
 
-    Mat tmp;
-    int n = 5;  // vertical zoning
-    int m = 5;  // horizontal zoning
+    cv::Mat tmp;
+    int n = 6;  // vertical zoning
+    int m = 6;  // horizontal zoning
     int density;
     double density_normalize;
     std::vector<double> results;
-
-//    tmp = img.rowRange(haut_g.second, bas_d.second);
-//    tmp = tmp.colRange(haut_g.first, bas_d.first);
-//
-//    namedWindow( "Element", WINDOW_NORMAL);
-//    imshow("Element",tmp);
-//    waitKey(0);
 
     int correction = 3; // Facteur de correction du rectangle englobant
     std::pair<int,int> x, y;
@@ -58,9 +77,47 @@ std::vector<double> Kppv::zoning(Mat& img, std::pair<int,int> haut_g, std::pair<
                 density += tmp.rows - countNonZero(tmp.col(k));
 
             density_normalize = density / (double)(tmp.rows * tmp.cols);
+
             results.push_back(density_normalize);
         }
     }
 
     return results;
+}
+
+
+int Kppv::proba(std::vector<double> a_classer) {
+
+    int k = 6;  // nb de voisins
+    std::vector< std::pair<double,unsigned long> > results;
+    std::vector<double> probabilites(10, 0.0);
+
+    for(unsigned long i = 0 ; i < classes.size(); i++) {  // Iteration parmis ttes les classes
+        for (unsigned long j = 0; j < classes.at(0)->size(); j++)    // Iteration ds une classe
+            results.push_back(std::pair<double, unsigned long>(distance_euclidienne(a_classer, classes.at(i)->at(j)), i));
+    }
+    std::sort(results.begin(), results.end());
+
+    for(int i = 0; i < k; i++)
+        probabilites[results[i].second]++;
+
+    for(int i = 0; i < probabilites.size(); i++)
+        if(probabilites[i] != 0) probabilites[i] /= k;
+
+    auto it = std::max_element(probabilites.begin(), probabilites.end());
+
+
+    return (int)(it - probabilites.begin());
+}
+
+
+double Kppv::distance_euclidienne(std::vector<double> X, std::vector<double> Y) {
+    double sum = 0;
+
+    if(X.size() != Y.size()) std::cout << "calcul distance euclidienne impossible" << std::endl;
+
+    for(unsigned long i = 0; i < X.size(); i++)
+        sum += (X.at(i) - Y.at(i)) * (X.at(i) - Y.at(i));
+
+    return sqrt(sum);   // Supp racine pr gain de perf
 }

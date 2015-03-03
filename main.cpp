@@ -34,5 +34,10 @@ int main(int argc, char *argv[])
     delete extract_3;
 
 
+    // Display source
+//    namedWindow( "Source", WINDOW_NORMAL);
+//    imshow("Source",app);
+//    waitKey(0);
+
     return 0;
 }
