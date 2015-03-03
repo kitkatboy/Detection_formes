@@ -2,6 +2,7 @@
 #include "Extractor.h"
 #include "Distance.h"
 #include "kppv.h"
+#include "Combine.h"
 
 
 int main(int argc, char *argv[])
@@ -32,6 +33,13 @@ int main(int argc, char *argv[])
     extract_3->run(positions_app, positions_test, app, test);
 
     delete extract_3;
+
+
+    // Question 5
+    Combine * extract_4 = new Combine();
+    extract_4->run();
+
+    delete extract_4;
 
 
     // Display source

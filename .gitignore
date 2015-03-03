@@ -3,4 +3,5 @@
 
 # Files
 *~
-*.pos
+*.positions
+*.proba

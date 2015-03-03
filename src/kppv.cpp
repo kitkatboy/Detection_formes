@@ -38,10 +38,11 @@ void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pa
                 cpt++;
         }
 
-        cptg += cpt;
         std::cout << "  -> " << cpt << " erreurs pour les " << i << std::endl;
+        cptg += cpt;
     }
     std::cout << "-> " << cptg << "% d'erreurs" << std::endl;
+    writeFile();
 }
 
 
@@ -88,7 +89,7 @@ std::vector<double> Kppv::zoning(cv::Mat& img, std::pair<int,int> haut_g, std::p
 
 int Kppv::proba(std::vector<double> a_classer) {
 
-    int k = 6;  // nb de voisins
+    int k = 6;  // nb de voisins //6
     std::vector< std::pair<double,unsigned long> > results;
     std::vector<double> probabilites(10, 0.0);
 
@@ -104,8 +105,9 @@ int Kppv::proba(std::vector<double> a_classer) {
     for(int i = 0; i < probabilites.size(); i++)
         if(probabilites[i] != 0) probabilites[i] /= k;
 
-    auto it = std::max_element(probabilites.begin(), probabilites.end());
+    to_write.push_back(probabilites);
 
+    auto it = std::max_element(probabilites.begin(), probabilites.end());
 
     return (int)(it - probabilites.begin());
 }
@@ -120,4 +122,25 @@ double Kppv::distance_euclidienne(std::vector<double> X, std::vector<double> Y) 
         sum += (X.at(i) - Y.at(i)) * (X.at(i) - Y.at(i));
 
     return sqrt(sum);   // Supp racine pr gain de perf
+}
+
+
+void Kppv::writeFile() {
+
+    std::string output = "data/entree_2.proba";
+
+    std::ofstream outputFile;
+    outputFile.open(output.c_str());
+    if (outputFile.is_open()) {
+
+        for(unsigned long i = 0; i < to_write.size(); i++) {
+            for(unsigned long j = 0; j < to_write.at(i).size(); j++)
+                outputFile << to_write.at(i).at(j) << "\t";
+            outputFile << std::endl;
+        }
+
+        outputFile.close();
+    } else {
+        std::cout << "File " << output << " not found" << std::endl;
+    }
 }

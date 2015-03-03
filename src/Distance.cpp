@@ -36,10 +36,12 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app, std::vecto
                 cpt++;
             }
         }
-        cptg += cpt;
+
         std::cout << "  -> " << cpt << " erreurs pour les " << i << std::endl;
+        cptg += cpt;
     }
     std::cout << "-> " << cptg << "% d'erreurs" << std::endl;
+    writeFile();
 }
 
 
@@ -55,7 +57,7 @@ std::vector<double> Distance::moyenne(std::vector< std::vector<double> > *entree
         for(unsigned long j = 0; j < entree->size(); j++)
             cpt += entree->at(j).at(i);
 
-        moy.push_back(cpt / entree->at(0).size());
+        moy.push_back(cpt / entree->size()/*entree->at(0).size()*/);
     }
 
     return moy;
@@ -67,7 +69,7 @@ std::vector<double> Distance::profil(std::pair<int,int> haut_gauche, std::pair<i
     int j;
     std::vector<double> result;
 
-    int d = 9;
+    int d = 9; //9
     int correction = -1; // Facteur de correction du rectangle englobant
     std::pair<int,int> x,y;
 
@@ -101,25 +103,26 @@ std::vector<double> Distance::profil(std::pair<int,int> haut_gauche, std::pair<i
 
 unsigned long Distance::proba(std::vector<double> a_classer) {
 
-    double sum;
+    double sum = 0;
     double result = -1;
     double tmp;
     unsigned long rclass = 100;
+    std::vector<double> probabilites;
 
-    for(unsigned long i =0 ; i < moy_class.size(); i++){
+    for(unsigned long j = 0; j < moy_class.size(); j++)
+        sum += exp(-distance_euclidienne(a_classer,moy_class.at(j)));
 
-        sum = 0;
-
-        for(unsigned long j = 0; j < moy_class.size(); j++)
-            sum += exp(-distance_euclidienne(a_classer,moy_class.at(j)));
-
+    for(unsigned long i = 0 ; i < moy_class.size(); i++) {
         tmp = exp(-distance_euclidienne(a_classer,moy_class.at(i))) / sum;
+        probabilites.push_back(tmp);
 
         if(tmp > result) {
             result = tmp;
             rclass = i;
         }
     }
+
+    to_write.push_back(probabilites);
 
     return rclass;
 }
@@ -134,4 +137,25 @@ double Distance::distance_euclidienne(std::vector<double> X, std::vector<double>
         sum += (X.at(i) - Y.at(i))*(X.at(i) - Y.at(i));
 
     return sqrt(sum);
+}
+
+
+void Distance::writeFile() {
+
+    std::string output = "data/entree_1.proba";
+
+    std::ofstream outputFile;
+    outputFile.open(output.c_str());
+    if (outputFile.is_open()) {
+
+        for(unsigned long i = 0; i < to_write.size(); i++) {
+            for(unsigned long j = 0; j < to_write.at(i).size(); j++)
+                outputFile << to_write.at(i).at(j) << "\t";
+            outputFile << std::endl;
+        }
+
+        outputFile.close();
+    } else {
+        std::cout << "File " << output << " not found" << std::endl;
+    }
 }

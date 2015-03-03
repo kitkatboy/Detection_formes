@@ -5,12 +5,14 @@
 #include <cv.h>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 
 class Kppv
 {
 protected:
     std::vector< std::vector< std::vector <double> >* > classes;
+    std::vector<std::vector<double>> to_write;
 
 public:
     Kppv();
@@ -19,6 +21,7 @@ public:
     std::vector<double> zoning(cv::Mat& img, std::pair<int,int> haut_g, std::pair<int,int> bas_d);
     int proba(std::vector<double> a_classer);
     double distance_euclidienne(std::vector<double> X, std::vector<double> Y);
+    void writeFile();
 };
 
 

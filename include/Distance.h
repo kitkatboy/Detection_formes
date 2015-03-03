@@ -5,12 +5,14 @@
 #include <cv.h>
 #include <vector>
 #include <math.h>
+#include <fstream>
 
 
 class Distance
 {
 protected:
     std::vector<std::vector<double>> moy_class;
+    std::vector<std::vector<double>> to_write;
 
 public:
     Distance();
@@ -20,6 +22,7 @@ public:
     std::vector<double> profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_droit, cv::Mat& source);
     double distance_euclidienne(std::vector<double> X, std::vector<double> Y);
     unsigned long proba(std::vector<double> a_classer);
+    void writeFile();
 };
 
 

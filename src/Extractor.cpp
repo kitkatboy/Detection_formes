@@ -50,16 +50,13 @@ void Extractor::get_positions(Mat& img, std::vector< std::pair<int,int> >* vec, 
 
 void Extractor::writeFile(std::vector< std::pair<int,int> >* vec, std::string name) {
 
-    std::string output = "data/" + name + ".pos";
+    std::string output = "data/" + name + ".positions";
 
     std::ofstream outputFile;
     outputFile.open(output.c_str());
     if (outputFile.is_open()) {
-
-        for(unsigned long i = 0; i < vec->size(); i++) {
-            outputFile << vec->at(i).first << std::endl;
-            outputFile << vec->at(i).second << std::endl;
-        }
+        for(unsigned long i = 0; i < vec->size() - 1; i+=2)
+            outputFile << vec->at(i).first << "\t" << vec->at(i).second << "\t" << vec->at(i+1).first << "\t" << vec->at(i+1).second << std::endl;
 
         outputFile.close();
     } else {
