@@ -12,7 +12,7 @@ class Kppv
 {
 protected:
     std::vector< std::vector< std::vector <double> >* > classes;
-    std::vector<std::vector<double>> to_write;
+    std::vector<std::vector<double>> vecteurs_probabilites;
 
 public:
     Kppv();

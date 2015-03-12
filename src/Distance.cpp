@@ -11,8 +11,8 @@ Distance::~Distance() {
 
 void Distance::run(std::vector< std::pair<int, int> >* positions_app, std::vector< std::pair<int, int> >* positions_test, cv::Mat& app, cv::Mat& test) {
 
-    int cpt;
-    int cptg = 0;
+    int err, err_g = 0, unknow, unknow_g = 0;
+    unsigned int result;
     std::vector< std::vector<double> > *tmp;
 
     std::cout << "\nMethode Classifieur par profils et distances euclidiennes minimum..." << std::endl;
@@ -29,18 +29,26 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app, std::vecto
 
     for(int i = 0; i < 10; i++) {
 
-        cpt = 0;
+        err = 0;
+        unknow = 0;
 
         for (int j = 0; j < 10; j++) {
-            if(i != proba(profil(positions_test->at((i * positions_test->size() / 10) + (j * 2)), positions_test->at((i * positions_test->size() / 10) + (j * 2)+1), test))) {
-                cpt++;
+
+            result = proba(profil(positions_test->at((i * positions_test->size() / 10) + (j * 2)), positions_test->at((i * positions_test->size() / 10) + (j * 2)+1), test));
+
+            if(result == 10) {
+                unknow++;
+            } else if(i != result) {
+                err++;
             }
         }
 
-        std::cout << "  -> " << cpt << " erreurs pour les " << i << std::endl;
-        cptg += cpt;
+        std::cout << "  -> " << err << " erreurs et " << unknow << " incertitudes pour les " << i << std::endl;
+        err_g += err;
+        unknow_g += unknow;
     }
-    std::cout << "-> " << cptg << "% d'erreurs" << std::endl;
+    std::cout << "-> " << err_g << "% d'erreurs et " << unknow_g << "% d'incertitudes" << std::endl;
+
     writeFile();
 }
 
@@ -50,11 +58,11 @@ std::vector<double> Distance::moyenne(std::vector< std::vector<double> > *entree
     double cpt;
     std::vector<double> moy;
 
-    for(unsigned long i = 0; i < entree->at(0).size(); i++) {
+    for(unsigned int i = 0; i < entree->at(0).size(); i++) {
 
         cpt = 0;
 
-        for(unsigned long j = 0; j < entree->size(); j++)
+        for(unsigned int j = 0; j < entree->size(); j++)
             cpt += entree->at(j).at(i);
 
         moy.push_back(cpt / entree->size()/*entree->at(0).size()*/);
@@ -101,28 +109,32 @@ std::vector<double> Distance::profil(std::pair<int,int> haut_gauche, std::pair<i
 }
 
 
-unsigned long Distance::proba(std::vector<double> a_classer) {
+unsigned int Distance::proba(std::vector<double> a_classer) {
 
     double sum = 0;
-    double result = -1;
+    double result = -1, doublon = 0;
     double tmp;
-    unsigned long rclass = 100;
+    unsigned int rclass = 10;
     std::vector<double> probabilites;
 
-    for(unsigned long j = 0; j < moy_class.size(); j++)
+    for(unsigned int j = 0; j < moy_class.size(); j++)
         sum += exp(-distance_euclidienne(a_classer,moy_class.at(j)));
 
-    for(unsigned long i = 0 ; i < moy_class.size(); i++) {
+    for(unsigned int i = 0 ; i < moy_class.size(); i++) {
         tmp = exp(-distance_euclidienne(a_classer,moy_class.at(i))) / sum;
         probabilites.push_back(tmp);
 
         if(tmp > result) {
             result = tmp;
             rclass = i;
+        } else if(tmp == result) {
+            doublon = tmp;
         }
+
+        if(result == doublon && i == moy_class.size() - 1) rclass = 10;
     }
 
-    to_write.push_back(probabilites);
+    vecteurs_probabilites.push_back(probabilites);
 
     return rclass;
 }
@@ -131,9 +143,9 @@ unsigned long Distance::proba(std::vector<double> a_classer) {
 double Distance::distance_euclidienne(std::vector<double> X, std::vector<double> Y){
     double sum = 0;
 
-    if(X.size() != Y.size()) std::cout<<"calcul distance euclidienne impossible"<<std::endl;
+    if(X.size() != Y.size()) std::cout << "Calcul de la distance euclidienne impossible." << std::endl;
 
-    for(unsigned long i = 0; i < X.size(); i++)
+    for(unsigned int i = 0; i < X.size(); i++)
         sum += (X.at(i) - Y.at(i))*(X.at(i) - Y.at(i));
 
     return sqrt(sum);
@@ -148,9 +160,9 @@ void Distance::writeFile() {
     outputFile.open(output.c_str());
     if (outputFile.is_open()) {
 
-        for(unsigned long i = 0; i < to_write.size(); i++) {
-            for(unsigned long j = 0; j < to_write.at(i).size(); j++)
-                outputFile << to_write.at(i).at(j) << "\t";
+        for(unsigned int i = 0; i < vecteurs_probabilites.size(); i++) {
+            for(unsigned int j = 0; j < vecteurs_probabilites.at(i).size(); j++)
+                outputFile << vecteurs_probabilites.at(i).at(j) << "\t";
             outputFile << std::endl;
         }
 

@@ -17,15 +17,7 @@ void Combine::run() {
     entree_1 = readFile("data/entree_1.proba");
     entree_2 = readFile("data/entree_2.proba");
 
-
-//    for(unsigned long i = 0; i < entree_2->size(); i++) {
-//        for(unsigned long j = 0; j < entree_2->at(i)->size(); j++)
-//            std::cout << entree_2->at(i)->at(j) << "\t";
-//        std::cout << std::endl;
-//    }
-
-    somme();
-    produit();
+    calcul();
 }
 
 
@@ -57,9 +49,13 @@ std::vector< std::vector<double>* >* Combine::readFile(std::string file_path) {
 }
 
 
-void Combine::somme() {
+/*
+ * choice = 0 -> Somme
+ * choice = 1 -> Produit
+ */
+void Combine::calcul(int choice) {
 
-    int cpt = 0;
+    int err = 0, unknow = 0;
     double sum = 0;
     std::vector<double> *probabilites;
 
@@ -69,49 +65,27 @@ void Combine::somme() {
         probabilites = new std::vector<double>;
 
         for(unsigned long j = 0; j < 10; j++)
-            sum += entree_1->at(i)->at(j) + entree_2->at(i)->at(j);
+            sum += (choice) ? entree_1->at(i)->at(j) * entree_2->at(i)->at(j)
+                            : entree_1->at(i)->at(j) + entree_2->at(i)->at(j);
 
         for(unsigned long j = 0; j < 10; j++)
-            probabilites->push_back((entree_1->at(i)->at(j) + entree_2->at(i)->at(j)) / sum);
+            (choice) ? probabilites->push_back((entree_1->at(i)->at(j) * entree_2->at(i)->at(j)) / sum)
+                     : probabilites->push_back((entree_1->at(i)->at(j) + entree_2->at(i)->at(j)) / sum);
 
-        auto it = std::max_element(probabilites->begin(), probabilites->end());
-        if((int)(it - probabilites->begin()) != (int)(i / 10)) cpt++;
+        std::vector<double>::iterator it = std::max_element(probabilites->begin(), probabilites->end());
 
-//        std::cout << i << " -> " << (int)(it - probabilites->begin()) << std::endl;
+        for(std::vector<double>::iterator it2 = probabilites->begin(); it2 != probabilites->end(); ++it2) {
+            if(it != it2 && *it == *it2) {
+                unknow++;
+                break;
+            }
+        }
 
-//        std::cout << "proba : " << (int)(it - probabilites->begin()) << "\tAtt : " << (int)(i / 10) << std::endl;
-
-//        for(unsigned long j = 0; j < probabilites->size(); j++)
-//            std::cout << probabilites->at(j) << "\t";
-//        std::cout << std::endl;
+        if(!unknow && (int)(it - probabilites->begin()) != (int)(i / 10)) err++;
     }
-    std::cout << "Somme   -> " << cpt << "% d'erreurs" << std::endl;
-}
 
+    (choice) ? std::cout << "Produit -> " << err << "% d'erreurs et " << unknow << "% d'incertitues" << std::endl
+             : std::cout << "Somme   -> " << err << "% d'erreurs et " << unknow << "% d'incertitues" << std::endl;
 
-void Combine::produit() {
-
-    int cpt = 0;
-    double sum = 0;
-    std::vector<double> *probabilites;
-
-    for(unsigned long i = 0; i < 100; i++) {
-
-        sum = 0;
-        probabilites = new std::vector<double>;
-
-        for(unsigned long j = 0; j < 10; j++)
-            sum += entree_1->at(i)->at(j) * entree_2->at(i)->at(j);
-
-        for(unsigned long j = 0; j < 10; j++)
-            probabilites->push_back((entree_1->at(i)->at(j) * entree_2->at(i)->at(j)) / sum);
-
-        auto it = std::max_element(probabilites->begin(), probabilites->end());
-        if((int)(it - probabilites->begin()) != (int)(i / 10)) cpt++;
-
-//        for(unsigned long j = 0; j < 10; j++)
-//            std::cout << probabilites->at(j) << "\t";
-//        std::cout << std::endl;
-    }
-    std::cout << "Produit -> " << cpt << "% d'erreurs" << std::endl;
+    if(!choice) calcul(++choice);
 }

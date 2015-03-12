@@ -19,8 +19,7 @@ public:
     ~Combine();
     void run();
     std::vector< std::vector<double>* >* readFile(std::string file_path);
-    void somme();
-    void produit();
+    void calcul(int choice = 0);
 };
 
 

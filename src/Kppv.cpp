@@ -1,4 +1,4 @@
-#include "kppv.h"
+#include "Kppv.h"
 
 
 Kppv::Kppv() {
@@ -11,8 +11,7 @@ Kppv::~Kppv() {
 
 void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pair<int, int> >* pos_test, cv::Mat& app, cv::Mat& test) {
 
-    int cpt;
-    int cptg = 0;
+    int result, err, err_g = 0, unknow, unknow_g = 0;
     std::vector< std::vector<double> > *densities;
 
     std::cout << "\nMethode Classifieur par densites et k plus proches voisins..." << std::endl;
@@ -31,17 +30,26 @@ void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pa
     // Test
     for(int i = 0; i < 10; i++) {   // Iteration lignes
 
-        cpt = 0;
+        err = 0;
+        unknow = 0;
 
         for(int j = 0; j < pos_test->size() / 10; j += 2) {  // Iteration colonnes
-            if(i != proba(zoning(test, pos_test->at(i * (pos_test->size() / 10) + j), pos_test->at(i * (pos_test->size() / 10) + j + 1))))
-                cpt++;
+
+            result = proba(zoning(test, pos_test->at(i * (pos_test->size() / 10) + j), pos_test->at(i * (pos_test->size() / 10) + j + 1)));
+
+            if(result == 10) {
+                unknow++;
+            } else if(i != result) {
+                err++;
+            }
         }
 
-        std::cout << "  -> " << cpt << " erreurs pour les " << i << std::endl;
-        cptg += cpt;
+        std::cout << "  -> " << err << " erreurs et " << unknow << " incertitudes pour les " << i << std::endl;
+        err_g += err;
+        unknow_g += unknow;
     }
-    std::cout << "-> " << cptg << "% d'erreurs" << std::endl;
+    std::cout << "-> " << err_g << "% d'erreurs et " << unknow_g << "% d'incertitudes" << std::endl;
+
     writeFile();
 }
 
@@ -49,8 +57,8 @@ void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pa
 std::vector<double> Kppv::zoning(cv::Mat& img, std::pair<int,int> haut_g, std::pair<int,int> bas_d) {
 
     cv::Mat tmp;
-    int n = 6;  // vertical zoning
-    int m = 6;  // horizontal zoning
+    int n = 5;  // vertical zoning
+    int m = 5;  // horizontal zoning
     int density;
     double density_normalize;
     std::vector<double> results;
@@ -89,27 +97,35 @@ std::vector<double> Kppv::zoning(cv::Mat& img, std::pair<int,int> haut_g, std::p
 
 int Kppv::proba(std::vector<double> a_classer) {
 
-    int k = 6;  // nb de voisins //6
-    std::vector< std::pair<double,unsigned long> > results;
+    int k = 5;  // nb de voisins
+    int classe = 10;
+    double tmp, result = -1;
+    std::vector< std::pair<double, unsigned int> > results;
     std::vector<double> probabilites(10, 0.0);
 
-    for(unsigned long i = 0 ; i < classes.size(); i++) {  // Iteration parmis ttes les classes
-        for (unsigned long j = 0; j < classes.at(0)->size(); j++)    // Iteration ds une classe
-            results.push_back(std::pair<double, unsigned long>(distance_euclidienne(a_classer, classes.at(i)->at(j)), i));
+    for(unsigned int i = 0 ; i < classes.size(); i++) {  // Iteration parmis ttes les classes
+        for (unsigned int j = 0; j < classes.at(0)->size(); j++)    // Iteration ds une classe
+            results.push_back(std::pair<double, unsigned int>(distance_euclidienne(a_classer, classes.at(i)->at(j)), i));
     }
     std::sort(results.begin(), results.end());
 
     for(int i = 0; i < k; i++)
         probabilites[results[i].second]++;
 
-    for(int i = 0; i < probabilites.size(); i++)
-        if(probabilites[i] != 0) probabilites[i] /= k;
+    for(std::vector<double>::iterator it = probabilites.begin(); it != probabilites.end(); ++it) {
+        tmp = (*it != 0) ? (*it) /= k : 0.0;
 
-    to_write.push_back(probabilites);
+        if(tmp > result) {
+            result = tmp;
+            classe = (int)(it - probabilites.begin());
+        } else if(tmp == result) {
+            classe = 10;
+        }
+    }
 
-    auto it = std::max_element(probabilites.begin(), probabilites.end());
+    vecteurs_probabilites.push_back(probabilites);
 
-    return (int)(it - probabilites.begin());
+    return classe;
 }
 
 
@@ -118,10 +134,10 @@ double Kppv::distance_euclidienne(std::vector<double> X, std::vector<double> Y) 
 
     if(X.size() != Y.size()) std::cout << "calcul distance euclidienne impossible" << std::endl;
 
-    for(unsigned long i = 0; i < X.size(); i++)
+    for(unsigned int i = 0; i < X.size(); i++)
         sum += (X.at(i) - Y.at(i)) * (X.at(i) - Y.at(i));
 
-    return sqrt(sum);   // Supp racine pr gain de perf
+    return sqrt(sum);   // Supp racine possible pr gain de perf
 }
 
 
@@ -133,9 +149,9 @@ void Kppv::writeFile() {
     outputFile.open(output.c_str());
     if (outputFile.is_open()) {
 
-        for(unsigned long i = 0; i < to_write.size(); i++) {
-            for(unsigned long j = 0; j < to_write.at(i).size(); j++)
-                outputFile << to_write.at(i).at(j) << "\t";
+        for(unsigned int i = 0; i < vecteurs_probabilites.size(); i++) {
+            for(unsigned int j = 0; j < vecteurs_probabilites.at(i).size(); j++)
+                outputFile << vecteurs_probabilites.at(i).at(j) << "\t";
             outputFile << std::endl;
         }
 
