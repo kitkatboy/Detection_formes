@@ -12,14 +12,24 @@ using namespace cv;
 class Extractor
 {
 protected:
+    Mat* img;
+    std::string filename;
+    std::vector< std::pair<int,int> > to_write;
+    std::vector< std::vector<double> > *features_1 = new std::vector< std::vector<double> >;
+    std::vector< std::vector<double> > *features_2 = new std::vector< std::vector<double> >;
 
 public:
     Extractor();
     ~Extractor();
-    void get_positions(Mat& img, std::vector< std::pair<int,int> >* vec, std::pair<int,int> haut_g, std::pair<int,int> bas_d, int choice, bool write);
-    void writeFile(std::vector< std::pair<int,int> >* vec, std::string name);
-    void show_element(Mat& img, std::vector< std::pair<int,int> >* pos, int line, int column);
-    void show_histo(Mat& img, int choice);
+    void set_data(Mat* data, std::string name);
+    void extraction(std::pair<int,int> haut_g, std::pair<int,int> bas_d, int choice, Mat* tmp);
+    void profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_droit);
+    void zoning(std::pair<int,int> haut_g, std::pair<int,int> bas_d);
+    std::vector< std::vector<double> >* get_profils();
+    std::vector< std::vector<double> >* get_densites();
+    void writeFile();
+    void show_element(int line, int column);
+    void show_histo(int choice);
 };
 
 

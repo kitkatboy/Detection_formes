@@ -9,7 +9,7 @@ Distance::~Distance() {
 }
 
 
-void Distance::run(std::vector< std::pair<int, int> >* positions_app, std::vector< std::pair<int, int> >* positions_test, cv::Mat& app, cv::Mat& test) {
+void Distance::run(std::vector< std::vector<double> >* examples_features_1, std::vector< std::vector<double> >* tests_features_1) {
 
     int err, err_g = 0, unknow, unknow_g = 0;
     unsigned int result;
@@ -21,9 +21,9 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app, std::vecto
 
         tmp = new std::vector< std::vector<double> >;
 
-        for(int j = 0; j < 20; j++) {
-            tmp->push_back(profil(positions_app->at((i * positions_app->size() / 10) + (j * 2)), positions_app->at((i * positions_app->size() / 10) + (j * 2)+1),app));
-        }
+        for(unsigned int j = 0; j < 20; j++)
+            tmp->push_back(examples_features_1->at(i * 20 + j));
+
         moy_class.push_back(moyenne(tmp));
     }
 
@@ -32,9 +32,9 @@ void Distance::run(std::vector< std::pair<int, int> >* positions_app, std::vecto
         err = 0;
         unknow = 0;
 
-        for (int j = 0; j < 10; j++) {
+        for (unsigned int j = 0; j < 10; j++) {
 
-            result = proba(profil(positions_test->at((i * positions_test->size() / 10) + (j * 2)), positions_test->at((i * positions_test->size() / 10) + (j * 2)+1), test));
+            result = proba(tests_features_1->at(i * 10 + j));
 
             if(result == 10) {
                 unknow++;
@@ -72,43 +72,6 @@ std::vector<double> Distance::moyenne(std::vector< std::vector<double> > *entree
 }
 
 
-std::vector<double> Distance::profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_droit, cv::Mat& source) {
-
-    int j;
-    std::vector<double> result;
-
-    int d = 9; //9
-    int correction = -1; // Facteur de correction du rectangle englobant
-    std::pair<int,int> x,y;
-
-    x.first = haut_gauche.first - correction;
-    x.second = bas_droit.first + correction;
-    y.first = haut_gauche.second - correction;
-    y.second = bas_droit.second + correction;
-
-    for(int i = 1; i < d+1; i++) {
-        for(j = x.first; j < x.second; j++) {
-            if((int)source.at<unsigned char>(y.first + i * (((y.second - y.first) / (double)(d+2)) + 0.5), j) == 0) {
-                break;
-            }
-        }
-        result.push_back((double)(j - x.first) / (x.second - x.first));
-    }
-
-    for(int i = 1; i < d+1; i++) {
-        for(j = x.second ; j > x.first ; j--) {
-            if((int)source.at<unsigned char>(y.first + i * (((y.second - y.first) / (double)(d+2)) + 0.5), j) == 0) {
-                break;
-
-            }
-        }
-        result.push_back((double)(x.second - j) / (x.second - x.first));
-    }
-
-    return result;
-}
-
-
 unsigned int Distance::proba(std::vector<double> a_classer) {
 
     double sum = 0;
@@ -134,7 +97,7 @@ unsigned int Distance::proba(std::vector<double> a_classer) {
         if(result == doublon && i == moy_class.size() - 1) rclass = 10;
     }
 
-    vecteurs_probabilites.push_back(probabilites);
+    vecteurs_probabilites->push_back(probabilites);
 
     return rclass;
 }
@@ -154,15 +117,15 @@ double Distance::distance_euclidienne(std::vector<double> X, std::vector<double>
 
 void Distance::writeFile() {
 
-    std::string output = "data/entree_1.proba";
+    std::string output = "data/Distances.proba";
 
     std::ofstream outputFile;
     outputFile.open(output.c_str());
     if (outputFile.is_open()) {
 
-        for(unsigned int i = 0; i < vecteurs_probabilites.size(); i++) {
-            for(unsigned int j = 0; j < vecteurs_probabilites.at(i).size(); j++)
-                outputFile << vecteurs_probabilites.at(i).at(j) << "\t";
+        for(unsigned int i = 0; i < vecteurs_probabilites->size(); i++) {
+            for(unsigned int j = 0; j < vecteurs_probabilites->at(i).size(); j++)
+                outputFile << vecteurs_probabilites->at(i).at(j) << "\t";
             outputFile << std::endl;
         }
 

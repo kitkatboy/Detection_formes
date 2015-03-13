@@ -9,7 +9,7 @@ Kppv::~Kppv() {
 }
 
 
-void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pair<int, int> >* pos_test, cv::Mat& app, cv::Mat& test) {
+void Kppv::run(std::vector< std::vector<double> >* examples_features_2, std::vector< std::vector<double> >* tests_features_2) {
 
     int result, err, err_g = 0, unknow, unknow_g = 0;
     std::vector< std::vector<double> > *densities;
@@ -21,8 +21,8 @@ void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pa
 
         densities = new std::vector< std::vector<double> >;
 
-        for(int j = 0; j < pos_app->size() / 10; j += 2)  // Iteration colonnes
-            densities->push_back(zoning(app, pos_app->at(i * (pos_app->size() / 10) + j), pos_app->at(i * (pos_app->size() / 10) + j + 1)));
+        for(unsigned int j = 0; j < 20; j++)  // Iteration colonnes
+            densities->push_back(examples_features_2->at(i * 20 + j));
 
         classes.push_back(densities);
     }
@@ -33,9 +33,9 @@ void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pa
         err = 0;
         unknow = 0;
 
-        for(int j = 0; j < pos_test->size() / 10; j += 2) {  // Iteration colonnes
+        for(unsigned int j = 0; j < 10; j++) {  // Iteration colonnes
 
-            result = proba(zoning(test, pos_test->at(i * (pos_test->size() / 10) + j), pos_test->at(i * (pos_test->size() / 10) + j + 1)));
+            result = proba(tests_features_2->at(i * 10 + j));
 
             if(result == 10) {
                 unknow++;
@@ -51,47 +51,6 @@ void Kppv::run(std::vector< std::pair<int, int> >* pos_app, std::vector< std::pa
     std::cout << "-> " << err_g << "% d'erreurs et " << unknow_g << "% d'incertitudes" << std::endl;
 
     writeFile();
-}
-
-
-std::vector<double> Kppv::zoning(cv::Mat& img, std::pair<int,int> haut_g, std::pair<int,int> bas_d) {
-
-    cv::Mat tmp;
-    int n = 5;  // vertical zoning
-    int m = 5;  // horizontal zoning
-    int density;
-    double density_normalize;
-    std::vector<double> results;
-
-    int correction = 3; // Facteur de correction du rectangle englobant
-    std::pair<int,int> x, y;
-
-    x.first = haut_g.first - correction;
-    x.second = bas_d.first + correction;
-    y.first = haut_g.second - correction;
-    y.second = bas_d.second + correction;
-
-    int x_step = (x.second - x.first) / m;
-    int y_step = (y.second - y.first) / n;
-
-    for(int i = y.first; i < (y.first + n * y_step); i += y_step) {
-        for(int j = x.first; j < (x.first + m * x_step); j += x_step) {
-
-            density = 0;
-
-            tmp = img.rowRange(i, i + y_step);
-            tmp = tmp.colRange(j, j + x_step);
-
-            for(int k = 0; k < tmp.cols; k++)
-                density += tmp.rows - countNonZero(tmp.col(k));
-
-            density_normalize = density / (double)(tmp.rows * tmp.cols);
-
-            results.push_back(density_normalize);
-        }
-    }
-
-    return results;
 }
 
 
@@ -123,7 +82,7 @@ int Kppv::proba(std::vector<double> a_classer) {
         }
     }
 
-    vecteurs_probabilites.push_back(probabilites);
+    vecteurs_probabilites->push_back(probabilites);
 
     return classe;
 }
@@ -143,15 +102,15 @@ double Kppv::distance_euclidienne(std::vector<double> X, std::vector<double> Y) 
 
 void Kppv::writeFile() {
 
-    std::string output = "data/entree_2.proba";
+    std::string output = "data/Kppv.proba";
 
     std::ofstream outputFile;
     outputFile.open(output.c_str());
     if (outputFile.is_open()) {
 
-        for(unsigned int i = 0; i < vecteurs_probabilites.size(); i++) {
-            for(unsigned int j = 0; j < vecteurs_probabilites.at(i).size(); j++)
-                outputFile << vecteurs_probabilites.at(i).at(j) << "\t";
+        for(unsigned int i = 0; i < vecteurs_probabilites->size(); i++) {
+            for(unsigned int j = 0; j < vecteurs_probabilites->at(i).size(); j++)
+                outputFile << vecteurs_probabilites->at(i).at(j) << "\t";
             outputFile << std::endl;
         }
 

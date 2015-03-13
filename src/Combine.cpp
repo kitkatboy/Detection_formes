@@ -14,8 +14,8 @@ void Combine::run() {
     std::cout << "\nMethode par combinaison de classifieurs..." << std::endl;
 
     // Get vectors from files
-    entree_1 = readFile("data/entree_1.proba");
-    entree_2 = readFile("data/entree_2.proba");
+    entree_1 = readFile("data/Distances.proba");
+    entree_2 = readFile("data/Kppv.proba");
 
     calcul();
 }
