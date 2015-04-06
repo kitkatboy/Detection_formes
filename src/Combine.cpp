@@ -81,11 +81,11 @@ void Combine::calcul(int choice) {
             }
         }
 
-        if(!unknow && (int)(it - probabilites->begin()) != (int)(i / 10)) err++;
+        if(unknow || (int)(it - probabilites->begin()) != (int)(i / 10)) err++;
     }
 
-    (choice) ? std::cout << "Produit -> " << err << "% d'erreurs et " << unknow << "% d'incertitues" << std::endl
-             : std::cout << "Somme   -> " << err << "% d'erreurs et " << unknow << "% d'incertitues" << std::endl;
+    (choice) ? std::cout << "Produit -> " << err << "% d'erreurs" << std::endl
+             : std::cout << "Somme   -> " << err << "% d'erreurs" << std::endl;
 
     if(!choice) calcul(++choice);
 }

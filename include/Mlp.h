@@ -4,33 +4,29 @@
 
 #include <iostream>
 #include <vector>
-#include <math.h>
 #include <algorithm>
+#include <time.h>
+#include <fstream>
 #include "Neurone.h"
 
 
 class Mlp
 {
 protected:
-    std::vector<Neurone*> couche_entree;
-    std::vector<Neurone*> couche_cachee;
-    std::vector<Neurone*> couche_sortie;
-//    std::vector< std::vector<int> > entrees = { {1, 0}, {0, 0}, {1, 1}, {0, 1} };   // Attendu -> 1,0,0,1
-//    std::vector< std::vector<int> > exemples = { {0, 0}, {0, 1}, {1, 0}, {1, 1} };
-//    std::vector< std::vector<int> > sorties = {{1, 0}, {0, 1}, {0, 1}, {1, 0}};
-    std::vector< std::vector<double> >* examples = new std::vector< std::vector<double> >;
-    std::vector< std::vector<double> >* tests = new std::vector< std::vector<double> >;
+    std::vector<Neurone> couche_entree;
+    std::vector<Neurone> couche_cachee;
+    std::vector<Neurone> couche_sortie;
 
 public:
     Mlp();
     ~Mlp();
-    void set_data(std::vector< std::vector<double> >* examples_features, std::vector< std::vector<double> >* tests_features);
-    void run();
-    void apprentissage();
+    void run(std::vector< std::vector<double> >* examples_features, std::vector< std::vector<double> >* tests_features, int neurones_caches, double learning_err);
+    void create(int neurones_caches, unsigned long data_size);
+    void learning(std::vector< std::vector<double> >* examples_features, double learning_err);
     void propagation(int choice = 0);
     void retro_propagation();
     void delta_rule(int choice = 0);
-    void test();
+    int test(std::vector< std::vector<double> >* tests_features);
 };
 
 

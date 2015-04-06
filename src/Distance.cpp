@@ -11,7 +11,7 @@ Distance::~Distance() {
 
 void Distance::run(std::vector< std::vector<double> >* examples_features_1, std::vector< std::vector<double> >* tests_features_1) {
 
-    int err, err_g = 0, unknow, unknow_g = 0;
+    int err = 0;
     unsigned int result;
     std::vector< std::vector<double> > *tmp;
 
@@ -27,27 +27,15 @@ void Distance::run(std::vector< std::vector<double> >* examples_features_1, std:
         moy_class.push_back(moyenne(tmp));
     }
 
-    for(int i = 0; i < 10; i++) {
-
-        err = 0;
-        unknow = 0;
-
+    for(int i = 0; i < 10; i++)
         for (unsigned int j = 0; j < 10; j++) {
 
             result = proba(tests_features_1->at(i * 10 + j));
 
-            if(result == 10) {
-                unknow++;
-            } else if(i != result) {
-                err++;
-            }
+            if(i != result) err++;
         }
 
-        std::cout << "  -> " << err << " erreurs et " << unknow << " incertitudes pour les " << i << std::endl;
-        err_g += err;
-        unknow_g += unknow;
-    }
-    std::cout << "-> " << err_g << "% d'erreurs et " << unknow_g << "% d'incertitudes" << std::endl;
+    std::cout << "-> " << err << "% d'erreurs" << std::endl;
 
     writeFile();
 }

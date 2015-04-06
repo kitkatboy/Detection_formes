@@ -12,7 +12,7 @@ using namespace cv;
 class Extractor
 {
 protected:
-    Mat* img;
+    Mat *img;
     std::string filename;
     std::vector< std::pair<int,int> > to_write;
     std::vector< std::vector<double> > *features_1 = new std::vector< std::vector<double> >;

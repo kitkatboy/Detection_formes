@@ -37,12 +37,12 @@ void Neurone::add_poids(double d){
 }
 
 
-double Neurone::get_poids(int i) {
+double Neurone::get_poids(unsigned int i) {
     return liste_poids[i];
 }
 
 
-void Neurone::set_poids(int i, double p) {
+void Neurone::set_poids(unsigned int i, double p) {
     liste_poids[i] = p;
 }
 

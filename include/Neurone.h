@@ -21,8 +21,8 @@ public:
     double get_sortie();
     void set_sortie(double val);
     void add_poids(double);
-    double get_poids(int);
-    void set_poids(int, double);
+    double get_poids(unsigned int);
+    void set_poids(unsigned int, double);
     double get_gradient();
     void set_gradient(double val);
     void calcul_gradient();

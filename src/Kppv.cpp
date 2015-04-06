@@ -9,46 +9,35 @@ Kppv::~Kppv() {
 }
 
 
+/* Get Kppv method with zoning parameters */
 void Kppv::run(std::vector< std::vector<double> >* examples_features_2, std::vector< std::vector<double> >* tests_features_2) {
 
-    int result, err, err_g = 0, unknow, unknow_g = 0;
+    int result, err = 0;
     std::vector< std::vector<double> > *densities;
 
     std::cout << "\nMethode Classifieur par densites et k plus proches voisins..." << std::endl;
 
-    // Apprentissage
-    for(int i = 0; i < 10; i++) {   // Iteration lignes
+    // Learning
+    for(int i = 0; i < 10; i++) {   // Iterate on matrix lines
 
         densities = new std::vector< std::vector<double> >;
 
-        for(unsigned int j = 0; j < 20; j++)  // Iteration colonnes
+        for(unsigned int j = 0; j < 20; j++)  // Iterate on matrix columns
             densities->push_back(examples_features_2->at(i * 20 + j));
 
         classes.push_back(densities);
     }
 
     // Test
-    for(int i = 0; i < 10; i++) {   // Iteration lignes
-
-        err = 0;
-        unknow = 0;
-
-        for(unsigned int j = 0; j < 10; j++) {  // Iteration colonnes
+    for(int i = 0; i < 10; i++)   // Iterate on matrix lines
+        for(unsigned int j = 0; j < 10; j++) {  // Iterate on matrix columns
 
             result = proba(tests_features_2->at(i * 10 + j));
 
-            if(result == 10) {
-                unknow++;
-            } else if(i != result) {
-                err++;
-            }
+            if(i != result) err++;
         }
 
-        std::cout << "  -> " << err << " erreurs et " << unknow << " incertitudes pour les " << i << std::endl;
-        err_g += err;
-        unknow_g += unknow;
-    }
-    std::cout << "-> " << err_g << "% d'erreurs et " << unknow_g << "% d'incertitudes" << std::endl;
+    std::cout << "-> " << err << "% d'erreurs" << std::endl;
 
     writeFile();
 }
@@ -56,21 +45,23 @@ void Kppv::run(std::vector< std::vector<double> >* examples_features_2, std::vec
 
 int Kppv::proba(std::vector<double> a_classer) {
 
-    int k = 5;  // nb de voisins
+    int k = 5;          // Nearest Neighbors
     int classe = 10;
     double tmp, result = -1;
     std::vector< std::pair<double, unsigned int> > results;
     std::vector<double> probabilites(10, 0.0);
 
-    for(unsigned int i = 0 ; i < classes.size(); i++) {  // Iteration parmis ttes les classes
-        for (unsigned int j = 0; j < classes.at(0)->size(); j++)    // Iteration ds une classe
+    for(unsigned int i = 0 ; i < classes.size(); i++)  // Iterate on classes
+        for (unsigned int j = 0; j < classes.at(0)->size(); j++)    // Iterate in class
             results.push_back(std::pair<double, unsigned int>(distance_euclidienne(a_classer, classes.at(i)->at(j)), i));
-    }
+
     std::sort(results.begin(), results.end());
 
+    // Neighbors counters
     for(int i = 0; i < k; i++)
         probabilites[results[i].second]++;
 
+    // Get maximum probability
     for(std::vector<double>::iterator it = probabilites.begin(); it != probabilites.end(); ++it) {
         tmp = (*it != 0) ? (*it) /= k : 0.0;
 

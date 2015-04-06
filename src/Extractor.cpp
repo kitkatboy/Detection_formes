@@ -23,6 +23,7 @@ void Extractor::extraction(std::pair<int,int> haut_g, std::pair<int,int> bas_d, 
 
     int data;
     bool in = false;
+    int edge = 1;   // marge en pixels sur chaque bord entre le chiffre et le rectangle englobant
 
     Mat* ref = (choice == 0) ? img : tmp;
     int sz = (choice == 0 || choice == 2) ? ref->rows : ref->cols;
@@ -32,22 +33,22 @@ void Extractor::extraction(std::pair<int,int> haut_g, std::pair<int,int> bas_d, 
 
         if (data != 0 && !in) {
             if(choice == 0) {
-                haut_g.second = i - 2;
+                haut_g.second = i - edge;
             } else if(choice == 1) {
-                haut_g.first = i - 2;
+                haut_g.first = i - edge;
             } else {
-                to_write.push_back(std::pair<int, int>(haut_g.first, haut_g.second + i - 2));
+                to_write.push_back(std::pair<int, int>(haut_g.first, haut_g.second + i - edge));
             }
             in = true;
         } else if (data == 0 && in) {
             if(choice == 0) {
-                bas_d.second = i + 2;
-                extraction(haut_g, bas_d, choice + 1, tmp = new Mat(ref->rowRange(haut_g.second, bas_d.second)));
+                bas_d.second = i + edge;
+                extraction(haut_g, bas_d, choice + 1, new Mat(ref->rowRange(haut_g.second, bas_d.second)));
             } else if(choice == 1) {
-                bas_d.first = i + 2;
-                extraction(haut_g, bas_d, choice + 1, tmp = new Mat(ref->colRange(haut_g.first, bas_d.first)));
+                bas_d.first = i + edge;
+                extraction(haut_g, bas_d, choice + 1, new Mat(ref->colRange(haut_g.first, bas_d.first)));
             } else {
-                to_write.push_back(std::pair<int, int>(bas_d.first, bas_d.second - (ref->rows - i) + 2));
+                to_write.push_back(std::pair<int, int>(bas_d.first, bas_d.second - (ref->rows - i) + edge));
 
                 // Get features
                 profil(to_write[to_write.size() - 2], to_write[to_write.size() - 1]);
@@ -104,10 +105,10 @@ void Extractor::zoning(std::pair<int,int> haut_g, std::pair<int,int> bas_d) {
     int n = 5;  // vertical zoning
     int m = 5;  // horizontal zoning
     int density;
-    double density_normalize;
+    double density_normalized;
     std::vector<double> results;
 
-    int correction = 3; // Facteur de correction du rectangle englobant
+    int correction = -1; // Facteur de correction du rectangle englobant
     std::pair<int,int> x, y;
 
     x.first = haut_g.first - correction;
@@ -115,23 +116,55 @@ void Extractor::zoning(std::pair<int,int> haut_g, std::pair<int,int> bas_d) {
     y.first = haut_g.second - correction;
     y.second = bas_d.second + correction;
 
+
+//    cv::Mat tmp2;
+//    tmp2 = img->rowRange(y.first, y.second);
+//    tmp2 = tmp2.colRange(x.first, x.second);
+//    namedWindow("Source", WINDOW_NORMAL);
+//    imshow("Source",tmp2);
+//    waitKey(0);
+
+
     int x_step = (x.second - x.first) / m;
     int y_step = (y.second - y.first) / n;
 
-    for(int i = y.first; i < (y.first + n * y_step); i += y_step) {
-        for(int j = x.first; j < (x.first + m * x_step); j += x_step) {
+    int modulo_x = (x.second - x.first) % m;
+    int modulo_y = (y.second - y.first) % n;
+
+
+    for(int i = y.first; i < y.second; i += y_step) {
+
+        int mod_x = modulo_x;
+
+        for(int j = x.first; j < x.second; j += x_step) {
 
             density = 0;
 
-            tmp = img->rowRange(i, i + y_step);
-            tmp = tmp.colRange(j, j + x_step);
+            tmp = img->rowRange(i, (modulo_y) ? i + y_step + 1 : i + y_step);
+            tmp = tmp.colRange(j, (mod_x) ? j + x_step + 1 : j + x_step);
+
+//            namedWindow("Zoning", WINDOW_NORMAL);
+//            imshow("Zoning",tmp);
+//            waitKey(0);
+
 
             for(int k = 0; k < tmp.cols; k++)
                 density += tmp.rows - countNonZero(tmp.col(k));
 
-            density_normalize = density / (double)(tmp.rows * tmp.cols);
+            density_normalized = density / (double)(tmp.rows * tmp.cols);
 
-            results.push_back(density_normalize);
+            results.push_back(density_normalized);
+
+
+            if(mod_x) {
+                j++;
+                mod_x--;
+            }
+        }
+
+        if(modulo_y) {
+            i++;
+            modulo_y--;
         }
     }
 
