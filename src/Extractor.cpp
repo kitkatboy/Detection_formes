@@ -67,7 +67,7 @@ void Extractor::profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_dr
     int j;
     std::vector<double> result;
 
-    int d = 9;
+    int d = 11;
     int correction = -1; // Facteur de correction du rectangle englobant
     std::pair<int,int> x,y;
 
@@ -99,11 +99,15 @@ void Extractor::profil(std::pair<int,int> haut_gauche, std::pair<int,int> bas_dr
 }
 
 
+void Extractor::set_zoning(int horizontal, int vertical) {
+    n = horizontal;
+    m = vertical;
+}
+
+
 void Extractor::zoning(std::pair<int,int> haut_g, std::pair<int,int> bas_d) {
 
     cv::Mat tmp;
-    int n = 5;  // vertical zoning
-    int m = 5;  // horizontal zoning
     int density;
     double density_normalized;
     std::vector<double> results;
