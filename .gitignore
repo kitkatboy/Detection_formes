@@ -1,7 +1,12 @@
 # Directories
 .idea/
+CMakeFiles/
 
 # Files
 *~
 *.positions
 *.proba
+*.cmake
+Makefile
+Detection_formes
+CMakeCache.txt
