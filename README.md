@@ -6,6 +6,6 @@ sudo apt-get install libopencv-dev
 
 <h6>Build:</h6>
 
-*cmake .
-*make
-*./{executable}
+* cmake .
+* make
+* ./{executable}
